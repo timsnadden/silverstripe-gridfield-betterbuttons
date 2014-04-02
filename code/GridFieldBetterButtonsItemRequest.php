@@ -2,16 +2,16 @@
 
 /**
  * Decorates {@link GridDetailForm_ItemRequest} to use new form actions and buttons.
- * 
+ *
  * @author  Uncle Cheese <unclecheese@leftandmain.com>
  * @package  gridfield-betterbuttons
- * 
+ *
  * */
 class GridFieldBetterButtonsItemRequest extends DataExtension {
 
 
 
-	
+
 	/**
 	 * @var array Allowed controller actions
 	 */
@@ -20,15 +20,15 @@ class GridFieldBetterButtonsItemRequest extends DataExtension {
 		'edit',
 		'ItemEditForm'
 	);
-	
-	
+
+
 
 
 	/**
 	 * Redirecting to the current URL doesn't do anything, so this is just a dummy action
 	 * that gives the request somewhere to go in order to force a reload, and then just
 	 * redirects back to the original link.
-	 * 
+	 *
 	 * @param SS_HTTPRequest The request object
 	 */
 	public function addnew(SS_HTTPRequest $r) {
@@ -40,15 +40,15 @@ class GridFieldBetterButtonsItemRequest extends DataExtension {
 
 	/**
 	 * Updates the detail form to include new form actions and buttons
-	 * 
-	 * @param Form The ItemEditForm object	 
+	 *
+	 * @param Form The ItemEditForm object
 	 */
-	public function updateItemEditForm($form) {		
-		
+	public function updateItemEditForm($form) {
+
 
 		Requirements::css(BETTER_BUTTONS_DIR.'/css/gridfield_betterbuttons.css');
 		Requirements::javascript(BETTER_BUTTONS_DIR.'/javascript/gridfield_betterbuttons.js');
-		
+
 		$actions = FieldList::create();
 		// New records
 		if($this->owner->record->ID == 0) {
@@ -60,7 +60,7 @@ class GridFieldBetterButtonsItemRequest extends DataExtension {
           if($field instanceof UploadField) {
             $files = true;
             break;
-          }				
+          }
         }
       }
 			if($files) {
@@ -94,7 +94,7 @@ class GridFieldBetterButtonsItemRequest extends DataExtension {
 		// Existing records
 		else {
 
-			// Saves the record and redirects back to same record 
+			// Saves the record and redirects back to same record
 			$actions->push(FormAction::create('doSave', _t('GridFieldDetailForm.SAVE', 'Save'))
 					->setUseButtonTag(true)
 					->addExtraClass('ss-ui-action-constructive')
@@ -110,7 +110,7 @@ class GridFieldBetterButtonsItemRequest extends DataExtension {
 				->addExtraClass("ss-ui-action-constructive")
 			);
 
-			if(!$this->getPreviousRecordID()) {				
+			if(!$this->getPreviousRecordID()) {
 				$p->addExtraClass('disabled');
 			}
 
@@ -128,14 +128,14 @@ class GridFieldBetterButtonsItemRequest extends DataExtension {
 				->setAttribute("data-toggletext", _t('GridFieldBetterButtons.AREYOUSURE','Yes. Delete this item.'))
 			);
 
-			$nextRecordID = $this->getNextRecordID();			
+			$nextRecordID = $this->getNextRecordID();
 			$cssClass = $nextRecordID ? "cms-panel-link" : "disabled";
 			$prevLink = $nextRecordID ? Controller::join_links($this->owner->gridField->Link(),"item", $nextRecordID) : "javascript:void(0);";
 			$linkTitle = $nextRecordID ? _t('GridFieldBetterButtons.NEXTRECORD','Go to the next record') : "";
-		
-			
+
+
 			$actions->push(LiteralField::create("prev_next_open",'<div class="gridfield-better-buttons-prevnext-wrap">'));
-			$actions->push(LiteralField::create("next", 
+			$actions->push(LiteralField::create("next",
 				sprintf(
 					"<a class='ss-ui-button gridfield-better-buttons-prevnext gridfield-better-buttons-prev %s' href='%s' title='%s'><img src='".BETTER_BUTTONS_DIR."/images/next.png' alt='next'  /></a>",
 					$cssClass,
@@ -150,7 +150,7 @@ class GridFieldBetterButtonsItemRequest extends DataExtension {
 			$prevLink = $previousRecordID ? Controller::join_links($this->owner->gridField->Link(),"item", $previousRecordID) : "javascript:void(0);";
 			$linkTitle = $previousRecordID ? _t('GridFieldBetterButtons.PREVIOUSRECORD','Go to the previous record') : "";
 
-			$actions->push(LiteralField::create("prev", 
+			$actions->push(LiteralField::create("prev",
 				sprintf(
 					"<a class='ss-ui-button gridfield-better-buttons-prevnext gridfield-better-buttons-prev %s' href='%s' title='%s'><img src='".BETTER_BUTTONS_DIR."/images/prev.png' alt='previous'  /></a>",
 					$cssClass,
@@ -165,6 +165,16 @@ class GridFieldBetterButtonsItemRequest extends DataExtension {
 
 		// Cancels the edit. Same as back button
 		$actions->push(LiteralField::create("doCancel",'<a class="backlink ss-ui-button cms-panel-link" href="'.$this->getBackLink().'?">Cancel</a>'));
+
+
+		if(!$this->owner->record->canDelete()) {
+			$actions->removeByName('action_doDelete');
+		}
+
+		if(!$this->owner->record->canCreate()) {
+			$actions->removeByName('action_doSaveAndAdd');
+		}
+
 		$form->setActions($actions);
 	}
 
@@ -173,7 +183,7 @@ class GridFieldBetterButtonsItemRequest extends DataExtension {
 
 	/**
 	 * Saves the form and forwards to a blank form to continue creating
-	 * 
+	 *
 	 * @param array The form data
 	 * @param Form The form object
 	 */
@@ -186,11 +196,11 @@ class GridFieldBetterButtonsItemRequest extends DataExtension {
 
 	/**
 	 * Saves the form and goes back to list view
-	 * 
+	 *
 	 * @param array The form data
 	 * @param Form The form object
-	 */	
-	public function doSaveAndQuit($data, $form) {		
+	 */
+	public function doSaveAndQuit($data, $form) {
 		Controller::curr()->getResponse()->addHeader("X-Pjax","Content");
 		return $this->saveAndRedirect($data, $form, $this->getBackLink());
 	}
@@ -199,7 +209,7 @@ class GridFieldBetterButtonsItemRequest extends DataExtension {
 	public function doSaveAndNext($data, $form) {
 		Controller::curr()->getResponse()->addHeader("X-Pjax","Content");
 		$link = Controller::join_links($this->owner->gridField->Link(),"item", $this->getNextRecordID());
-		return $this->saveAndRedirect($data, $form, $link);		
+		return $this->saveAndRedirect($data, $form, $link);
 	}
 
 
@@ -207,17 +217,17 @@ class GridFieldBetterButtonsItemRequest extends DataExtension {
 	public function doSaveAndPrev($data, $form) {
 		Controller::curr()->getResponse()->addHeader("X-Pjax","Content");
 		$link = Controller::join_links($this->owner->gridField->Link(),"item", $this->getPreviousRecordID());
-		return $this->saveAndRedirect($data, $form, $link);		
+		return $this->saveAndRedirect($data, $form, $link);
 	}
 
 
 
 	/**
 	 * Gets the top level controller.
-	 * 
+	 *
 	 * @return Controller
 	 * @todo  This had to be directly copied from {@link GridFieldDetailForm_ItemRequest} because it is a protected method and not visible to a decorator!
-	 */	
+	 */
 	protected function getToplevelController() {
 		$c = $this->owner->getController();
 		while($c && $c instanceof GridFieldDetailForm_ItemRequest) {
@@ -231,10 +241,10 @@ class GridFieldBetterButtonsItemRequest extends DataExtension {
 
 	/**
 	 * Gets the back link
-	 * 
+	 *
 	 * @return  string
 	 * @todo  This had to be directly copied from {@link GridFieldDetailForm_ItemRequest} because it is a protected method and not visible to a decorator!
-	 */	
+	 */
 	protected function getBackLink(){
 		// TODO Coupling with CMS
 		$backlink = '';
@@ -245,10 +255,10 @@ class GridFieldBetterButtonsItemRequest extends DataExtension {
 			} elseif($this->owner->getController()->hasMethod('Breadcrumbs')) {
 				$parents = $this->owner->getController()->Breadcrumbs(false)->items;
 				$backlink = array_pop($parents)->Link;
-			} 
+			}
 		}
 		if(!$backlink) $backlink = $toplevelController->Link();
-		
+
 		return $backlink;
 	}
 
@@ -257,7 +267,7 @@ class GridFieldBetterButtonsItemRequest extends DataExtension {
 	/**
 	 * Oh, the horror! DRY police be advised. This function is a serious offender.
 	 * Saves the form data and redirects to a given link
-	 * 
+	 *
 	 * @param array The form data
 	 * @param Form The form object
 	 * @param string The redirect link
@@ -267,7 +277,7 @@ class GridFieldBetterButtonsItemRequest extends DataExtension {
 		$new_record = $this->owner->record->ID == 0;
 		$controller = Controller::curr();
 		$list = $this->owner->gridField->getList();
-		
+
 		if($list instanceof ManyManyList) {
 			// Data is escaped in ManyManyList->add()
 			$extraData = (isset($data['ManyMany'])) ? $data['ManyMany'] : null;
