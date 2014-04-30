@@ -26,6 +26,7 @@ abstract class Button extends \FormAction {
 
 	public function __construct($name, $title = null, \Form $form, \GridFieldDetailForm_ItemRequest $request) {
 		$this->request = $request;
+		$this->form = $form;
 		return parent::__construct($name, $title, $form);
 	}
 
@@ -47,10 +48,15 @@ class Button_Save extends Button {
 		;
 	}
 
+	public function shouldDisplay() {
+		if($this->form && $this->form->record) {
+			return $this->form->record->canEdit();
+		} else {
+			return parent::shouldDisplay();
+		}
+	}
+
 }
-
-
-
 
 
 class Button_Cancel extends \LiteralField {
@@ -63,8 +69,6 @@ class Button_Cancel extends \LiteralField {
 }
 
 
-
-
 class Button_New extends Button {
 
 	public function __construct(\Form $form, \GridFieldDetailForm_ItemRequest $request) {
@@ -74,6 +78,14 @@ class Button_New extends Button {
 		->addExtraClass("ss-ui-action-constructive")
 		->setAttribute('data-icon', 'add')
 		;
+	}
+
+	public function shouldDisplay() {
+		if($this->form && $this->form->record) {
+			return $this->form->record->canCreate();
+		} else {
+			return parent::shouldDisplay();
+		}
 	}
 
 }
@@ -99,7 +111,11 @@ class Button_Delete extends Button {
 
 
 	public function shouldDisplay() {
-		return !$this->request->recordIsPublished();
+		if($this->form && $this->form->record) {
+			return $this->form->record->canDelete() && !$this->request->recordIsPublished();
+		} else {
+			return parent::shouldDisplay();
+		}
 	}
 }
 
@@ -127,6 +143,14 @@ class Button_SaveAndAdd extends Button {
 		;
 	}
 
+	public function shouldDisplay() {
+		if($this->form && $this->form->record) {
+			return $this->form->record->canCreate() && $this->form->record->canEdit();
+		} else {
+			return parent::shouldDisplay();
+		}
+	}
+
 }
 
 
@@ -151,6 +175,15 @@ class Button_SaveAndClose extends Button {
 		->setAttribute('data-icon', 'accept')
 		;
 	}
+
+	public function shouldDisplay() {
+		if($this->form && $this->form->record) {
+			return $this->form->record->canEdit();
+		} else {
+			return parent::shouldDisplay();
+		}
+	}
+
 }
 
 
@@ -173,6 +206,14 @@ class Button_SaveAndNext extends Button {
 		;
 	}
 
+	public function shouldDisplay() {
+		if($this->form && $this->form->record) {
+			return $this->form->record->canEdit();
+		} else {
+			return parent::shouldDisplay();
+		}
+	}
+
 }
 
 
@@ -193,6 +234,14 @@ class Button_SaveAndPrev extends Button {
 		return parent::transformToInput()
 		->addExtraClass("saveAndGoPrev")
 		;
+	}
+
+	public function shouldDisplay() {
+		if($this->form && $this->form->record) {
+			return $this->form->record->canEdit();
+		} else {
+			return parent::shouldDisplay();
+		}
 	}
 
 }
